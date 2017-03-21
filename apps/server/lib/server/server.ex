@@ -13,6 +13,11 @@ defmodule Server do
 
   defp loop_acceptor(socket) do
     {:ok, client} = :gen_tcp.accept(socket)
+
+    {:ok, {ip, _}} = :inet.peername(client)
+    ip = Enum.join(Tuple.to_list(ip), ".")
+    Logger.info "New connection: #{ip}"
+
     {:ok, pid} = Task.Supervisor.start_child(Server.TaskSupervisor,
       fn -> serve(client) end)
     :ok = :gen_tcp.controlling_process(client, pid)
@@ -20,18 +25,22 @@ defmodule Server do
   end
 
   defp serve(socket) do
-    socket
-    |> read_line()
-    |> write_line(socket)
+    msg =
+      with  {:ok, data} <- read_line(socket),
+            {:ok, map} <- JSON.decode(data),
+            %{"request" => req, "content" => con} <- map,
+            do: Server.Reply.get(req, con)
+
+    write_line(socket, msg)
     serve(socket)
   end
 
   defp read_line(socket) do
-    {:ok, data} = :gen_tcp.recv(socket, 0)
-    data
+    :gen_tcp.recv(socket, 0)
   end
 
-  defp write_line(line, socket) do
-    :gen_tcp.send(socket, line)
+  defp write_line(socket, {:ok, msg}) do
+    :gen_tcp.send(socket, msg)
   end
+  #defp write_line(socket, {:error})
 end
