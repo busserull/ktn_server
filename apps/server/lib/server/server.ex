@@ -7,7 +7,7 @@ defmodule Server do
   def accept(port) do
     Server.Users.start_link(Server.Users)
     {:ok, socket} = :gen_tcp.listen(port,
-      [:binary, packet: :line, active: false, reuseaddr: true])
+      [:binary, active: false, reuseaddr: true])
     Logger.info "Accepting connections on port #{port}"
     loop_acceptor(socket)
   end
