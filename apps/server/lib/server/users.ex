@@ -88,11 +88,11 @@ defmodule Server.Users do
     end
     {:reply, :ok, names}
   end
-  def hangle_call({:getname, client}, _from, names) do
+  def handle_call({:getname, client}, _from, names) do
     {:ok, {_ip, name}} = Map.fetch(names, client)
     {:reply, name, names}
   end
-  def hangle_call(:getallclients, _from, names) do
+  def handle_call(:getallclients, _from, names) do
     {:reply, Map.keys(names), names}
   end
   def handle_call(:getallusernames, _from, names) do

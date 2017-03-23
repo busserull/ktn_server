@@ -29,7 +29,8 @@ defmodule Server.Reply do
             "sender" => sender,
             "response" => response,
             "content" => content}
-    JSON.encode(map)
+    {:ok, reply} = JSON.encode(map)
+    reply
   end
 
   defp get_timestamp do

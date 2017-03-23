@@ -66,11 +66,8 @@ defmodule Server do
     Server.Users.rm_user(socket)
     exit(:shutdown)
   end
-  defp write_line(_socket, {:error, :nil}) do
-    Logger.info "Unrecognized message"
-  end
   defp write_line(_socket, _) do
-    Logger.info "Exception"
+    Logger.info "Unrecognized message."
   end
 
   defp broadcast([], _) do
