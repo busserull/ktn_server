@@ -8,6 +8,7 @@ defmodule Server.Application do
 
     children = [
       supervisor(Task.Supervisor, [[name: Server.TaskSupervisor]]),
+      #worker(Task, [Server.Users, :start, [Server.Users]]),
       worker(Task, [Server, :accept, [4040]])
     ]
 

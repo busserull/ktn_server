@@ -15,10 +15,25 @@ defmodule Server.Reply do
     {:names, :nil}
   end
   def get("help", _) do
-    {:help, help}
+    {:help, help()}
   end
   def get(_, _) do
     {:error, :nil}
+  end
+
+  @doc """
+  Creates a JSON of the server reply message.
+  """
+  def mk_msg(sender, response, content) do
+    map = %{"timestamp" => get_timestamp(),
+            "sender" => sender,
+            "response" => response,
+            "content" => content}
+    JSON.encode(map)
+  end
+
+  defp get_timestamp do
+    Time.to_string(Time.utc_now)
   end
 
   defp help do
