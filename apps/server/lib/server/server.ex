@@ -6,6 +6,7 @@ defmodule Server do
   """
   def accept(port) do
     Server.Users.start_link(Server.Users)
+    Server.History.start_link()
     {:ok, socket} = :gen_tcp.listen(port,
       [:binary, active: false, reuseaddr: true])
     Logger.info "Accepting connections on port #{port}"
@@ -43,6 +44,8 @@ defmodule Server do
     Server.Users.set_user_name(socket, user)
     :gen_tcp.send(socket, Server.Reply.mk_msg("Server", "info",
       "Login successful."))
+    log = Server.History.read_log()
+    send_history(socket, log)
   end
   defp write_line(socket, {:logout, :nil}) do
     Server.Users.set_user_name(socket, :nil)
@@ -52,6 +55,7 @@ defmodule Server do
   defp write_line(socket, {:msg, msg}) do
     msg = Server.Reply.mk_msg(Server.Users.get_user_name(socket),
       "message", msg)
+    Server.History.store_msg(msg)
     broadcast(Server.Users.get_all_clients, msg)
   end
   defp write_line(socket, {:names, :nil}) do
@@ -61,6 +65,10 @@ defmodule Server do
   end
   defp write_line(socket, {:help, help}) do
     :gen_tcp.send(socket, Server.Reply.mk_msg("Server", "info", help))
+  end
+  defp write_line(socket, {:history, :nil}) do
+    log = Server.History.read_log()
+    send_history(socket, log)
   end
   defp write_line(socket, {:error, :closed}) do
     Server.Users.rm_user(socket)
@@ -77,4 +85,26 @@ defmodule Server do
     :gen_tcp.send(head, msg)
     broadcast(tail, msg)
   end
+
+  defp send_history(socket, log) do
+    resp = "[" <> make_json_array(log, "") <> "]"
+    msg = Server.Reply.mk_msg("Server", "history", resp)
+    :gen_tcp.send(socket, msg)
+  end
+
+  defp make_json_array([], acc) do
+    acc
+  end
+  defp make_json_array([head|tail], acc) do
+    make_json_array(tail, acc <> "," <> head)
+  end
 end
+
+  #defp send_history(_socket, []) do
+  #  :ok
+  #end
+  #defp send_history(socket, [head|tail]) do
+  #  :gen_tcp.send(socket, head)
+  #  send_history(socket, tail)
+  #end
+  #end

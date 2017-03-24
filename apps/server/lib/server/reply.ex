@@ -17,6 +17,9 @@ defmodule Server.Reply do
   def get("help", _) do
     {:help, help()}
   end
+  def get("history", _) do
+    {:history, :nil}
+  end
   def get(_, _) do
     {:error, :nil}
   end
